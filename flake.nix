@@ -58,6 +58,7 @@
 
         python_env = with pkgs.python311Packages; [
           ibis-framework
+          ipykernel
           levenshtein
           openai
           pandas
