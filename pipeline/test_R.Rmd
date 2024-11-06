@@ -7,6 +7,10 @@ output:
 
 ```{r setup}
 library(here)
+library(dplyr)
+library(ggplot2)
+library(MASS)
+
 knitr::opts_knit$set(root.dir = here())
 options(box.path = here())
 
@@ -18,5 +22,33 @@ box::use(
 ```{r}
 df <- load$sample_data()
 
-print("R sucess: ", dim(df))
+print(paste("R sucess"))
+print(dim(df))
+```
+
+```{r}
+plot <- df |> ggplot(aes(x = col2, y = col1)) +
+    geom_bar(stat = "identity")
+
+ggsave(here("out", "test.svg"))
+plot
+```
+
+```{r}
+# Create a sample dataset
+set.seed(123)
+sample_data <- data.frame(
+    count = rpois(100, lambda = 10), # Response variable (counts)
+    predictor1 = rnorm(100), # Continuous predictor
+    predictor2 = as.factor(sample(c("A", "B"), 100, replace = TRUE)) # Categorical predictor
+)
+
+# View the first few rows of the dataset
+head(sample_data)
+
+# Fit a negative binomial regression model
+nb_model <- glm.nb(count ~ predictor1 + predictor2, data = sample_data)
+
+# Summarize the model
+summary(nb_model)
 ```

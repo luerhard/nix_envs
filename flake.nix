@@ -50,7 +50,9 @@
           irr
           jsonlite
           languageserver
+          MASS
           reticulate
+          svglite
           tidyverse
         ];
 
@@ -75,11 +77,14 @@
             torch.python311Packages.torch-bin
           ];
 
-          CWD = builtins.toString ./.;
           shellHook = ''
-            export PYTHONPATH="$CWD:$PYTHONPATH"
+            export work_dir=$(pwd)
+
+            export PYTHONPATH="$work_dir:$PYTHONPATH"
+            export RETICULATE_PYTHON=$(which python)
+
             python pipeline/test_python.py
-            Rscript -e "rmarkdown::render('pipeline/test_R.Rmd', 'html_document', 'test_R.html')"
+            Rscript -e "rmarkdown::render('pipeline/test_R.Rmd', 'html_document', '$work_dir/out/test_R.html')"
           '';
         };
       }
