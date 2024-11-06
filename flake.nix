@@ -48,12 +48,12 @@
           python311
         ];
 
-        linux_cuda_deps = with torch; [
+        linux_cuda_deps = if system == "x64_64-linux" then with torch; [
           # all for CUDA
           cudatoolkit
           linuxPackages.nvidia_x11
           cudaPackages.cudnn
-        ];
+        ] else [];
 
         r_env = with pkgs.rPackages; [
           box
@@ -84,14 +84,17 @@
             r_env
             python_env
             torch.python311Packages.torch-bin
+            linux_cuda_deps
             # spacy needs to be installed from another commit to use a version that works on darwin..
             spacy.python311Packages.spacy
-          ] ++ (if system == "x64_64-linux" then linux_cuda_deps else [ ]);
+          ];
+
+          ld_lib_path = if system == "x86_64-linux" then "${pkgs.linuxPackages.nvidia_x11}/lib" else "";
 
           shellHook = ''
             export work_dir=$(pwd)
 
-            export LD_LIBRARY_PATH="${pkgs.linuxPackages.nvidia_x11}/lib"
+            export LD_LIBRARY_PATH="$ld_lib_path:$LD_LIBRARY_PATH"
 
             export PYTHONPATH="$work_dir:$PYTHONPATH"
             export RETICULATE_PYTHON=$(which python)
