@@ -1,0 +1,22 @@
+---
+title: "Test R"
+output:
+    html_document:
+        number_sections: true
+---
+
+```{r setup}
+library(here)
+knitr::opts_knit$set(root.dir = here())
+options(box.path = here())
+
+box::use(
+    R / load
+)
+```
+
+```{r}
+df <- load$sample_data()
+
+print("R sucess: ", dim(df))
+```

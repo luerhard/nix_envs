@@ -39,6 +39,7 @@
         system_deps = with pkgs; [
           # trying to get rid of error msgs "unable to set locale -- default to 'C'"
           glibcLocales
+          pandoc
           python311
           R
         ];
@@ -48,6 +49,8 @@
           here
           irr
           jsonlite
+          languageserver
+          reticulate
           tidyverse
         ];
 
@@ -72,8 +75,11 @@
             torch.python311Packages.torch-bin
           ];
 
+          CWD = builtins.toString ./.;
           shellHook = ''
-            echo "THIS RUNS?"
+            export PYTHONPATH="$CWD:$PYTHONPATH"
+            python pipeline/test_python.py
+            Rscript -e "rmarkdown::render('pipeline/test_R.Rmd', 'html_document', 'test_R.html')"
           '';
         };
       }
