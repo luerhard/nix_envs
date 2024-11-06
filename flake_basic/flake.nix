@@ -8,8 +8,9 @@
     # spacypkgs.url = "github:NixOS/nixpkgs/fcb54ddcc974cff59bdfb7c1ac9e080299763d2d"; # v 3.7.5
     # spacypkgs.url = "github:NixOS/nixpkgs/61684d356e41c97f80087e89659283d00fe032ab"; # v 3.7.4
     spacypkgs.url = "github:NixOS/nixpkgs/458b097d81f90275b3fdf03796f0563844926708"; # v 3.7.3
-    # 2.5.1 marked as broken
-    # torchpkgs.url = "github:NixOS/nixpkgs/56c7c4a3f5fdbef5bf81c7d9c28fbb45dc626611"; # v 2.5.0
+    # 2.5.1 + 2.5.0 is broken in linux due to triton 3.1.0 build fail
+    # torchpkgs.url = "github:NixOS/nixpkgs/ca30f584e18024baf39c395001262ed936f27ebd"; # v 2.4.1
+    torchpkgs.url = "github:NixOS/nixpkgs/5ed627539ac84809c78b2dd6d26a5cebeb5ae269"; # v 2.4.0
   };
 
   outputs =
@@ -18,14 +19,22 @@
       nixpkgs,
       flake-utils,
       spacypkgs,
+      torchpkgs,
       ...
     }:
     flake-utils.lib.eachSystem [ "aarch64-darwin" "x86_64-linux" ] (
       system:
       let
-        pkgs = import nixpkgs { inherit system; config = { allowUnfree = true; }; };
+        pkgs = import nixpkgs {
+          inherit system;
+        };
         spacy = import spacypkgs { inherit system; };
-        # torch = import torchpkgs { inherit system; };
+        torch = import torchpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+          };
+        };
 
         system_deps = with pkgs; [
           # trying to get rid of error msgs "unable to set locale -- default to 'C'"
@@ -35,6 +44,7 @@
         ];
 
         r_env = with pkgs.rPackages; [
+          box
           here
           irr
           jsonlite
@@ -42,13 +52,12 @@
         ];
 
         python_env = with pkgs.python311Packages; [
+          ibis-framework
           levenshtein
           openai
           pandas
-          torch-bin
           rpy2
           tqdm
-          ibis-framework
         ];
       in
       {
@@ -59,7 +68,8 @@
             python_env
             # spacy needs to be installed from another commit to use a version that works on darwin..
             spacy.python311Packages.spacy
-            # torch.python311Packages.torch-bin
+            # torch needs to be installed from another commit to use a version that work in linux
+            torch.python311Packages.torch-bin
           ];
 
           shellHook = ''
