@@ -27,12 +27,16 @@
       let
         pkgs = import nixpkgs {
           inherit system;
+          config = {
+            allowUnfree = true;
+          };
         };
         spacy = import spacypkgs { inherit system; };
         torch = import torchpkgs {
           inherit system;
           config = {
             allowUnfree = true;
+            cudaSupport = true;
           };
         };
 
@@ -40,8 +44,15 @@
           # trying to get rid of error msgs "unable to set locale -- default to 'C'"
           glibcLocales
           pandoc
-          python311
           R
+          python311
+        ];
+
+        linux_cuda_deps = with torch; [
+          # all for CUDA
+          cudatoolkit
+          linuxPackages.nvidia_x11
+          cudaPackages.cudnn
         ];
 
         r_env = with pkgs.rPackages; [
@@ -72,14 +83,15 @@
             system_deps
             r_env
             python_env
+            torch.python311Packages.torch-bin
             # spacy needs to be installed from another commit to use a version that works on darwin..
             spacy.python311Packages.spacy
-            # torch needs to be installed from another commit to use a version that work in linux
-            torch.python311Packages.torch-bin
-          ];
+          ] ++ (if system == "x64_64-linux" then linux_cuda_deps else [ ]);
 
           shellHook = ''
             export work_dir=$(pwd)
+
+            export LD_LIBRARY_PATH="${pkgs.linuxPackages.nvidia_x11}/lib"
 
             export PYTHONPATH="$work_dir:$PYTHONPATH"
             export RETICULATE_PYTHON=$(which python)
